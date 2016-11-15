@@ -12,6 +12,8 @@ namespace TCPServer
 {
     public class ClientNode : IEquatable<string>
     {
+        public static int[,] labyrinth;
+
         public class Player
         {
             public Vector2 crt_dir; // (1, 0), (-1, 0), (0, 1), (0, -1)
@@ -22,6 +24,7 @@ namespace TCPServer
             public float speed;
             public int id;
 
+
             public Player(int id)
             {
                 this.id = id;
@@ -30,6 +33,8 @@ namespace TCPServer
                 speed = jekyll_speed;
 
             }
+           
+
         }
         public Player player;
         public static Vector2 RIGHT, LEFT, DOWN, UP, NONE;
@@ -44,7 +49,10 @@ namespace TCPServer
 		private bool _disconected;
 		private Server _server;
 
-		public string strId { get; set; }
+        const int WALL = 0;
+        const int PATH = 1;
+
+        public string strId { get; set; }
         public string name { get; set; }
 
         public ClientNode(TcpClient client, Server s)
@@ -64,6 +72,160 @@ namespace TCPServer
 			_disconected = false;
 			_server = s;
         }
+
+        public void treatInput(string dir)
+        {
+            if (dir == "UP")
+            {
+
+                player.next_dir = UP;
+                if (player.crt_dir == DOWN)
+                {
+                    player.crt_dir = UP;
+                }
+
+                update_turning_point();
+            }
+            else if (dir == "DOWN")
+            {
+
+                player.next_dir = DOWN;
+                if (player.crt_dir == UP)
+                {
+                    player.crt_dir = DOWN;
+                }
+
+                update_turning_point();
+            }
+            else if (dir == "LEFT")
+            {
+                player.next_dir = LEFT;
+                if (player.crt_dir == RIGHT)
+                {
+                    player.crt_dir = LEFT;
+                }
+
+                update_turning_point();
+            }
+            if (dir == "RIGHT")
+            {
+                player.next_dir = RIGHT;
+                if (player.crt_dir == LEFT)
+                {
+                    player.crt_dir = RIGHT;
+                }
+
+                update_turning_point();
+            }
+        }
+
+        int get_next_idx(float pos, float dir)
+        {
+            if (dir < 0)
+            {
+                return (int)Math.Floor(pos);
+            }
+            else if (dir > 0)
+            {
+                return (int)Math.Ceiling(pos);
+            }
+            else return (int)pos;
+        }
+
+        public void update_turning_point()
+        {
+
+
+            int startX = get_next_idx(player.pos.X, player.crt_dir.X);
+            int startY = get_next_idx(player.pos.Y, player.crt_dir.Y);
+
+            if (player.crt_dir == UP)
+            {
+                for (int j = startY; j < labyrinth.GetLength(0); j++)
+                {
+                    if (labyrinth[j,startX] == WALL)
+                    {
+                        player.turn_point = new Vector2(startX, j - 1);
+                        break;
+                    }
+                    else if (player.next_dir.X != 0)
+                    {
+                        int tryX = startX + (int)player.next_dir.X;
+                        if (labyrinth[j,tryX] == PATH)
+                        {
+                            player.turn_point = new Vector2(startX, j);
+                            break;
+                        }
+                    }
+                }
+            }
+            if (player.crt_dir == DOWN)
+            {
+                for (int j = startY; j >= 0; j--)
+                {
+                    if (labyrinth[j,startX] == WALL)
+                    {
+                        player.turn_point = new Vector2(startX, j + 1);
+                        break;
+                    }
+                    else if (player.next_dir.X != 0)
+                    {
+                        int tryX = startX + (int)player.next_dir.X;
+                        if (labyrinth[j,tryX] == PATH)
+                        {
+                            player.turn_point = new Vector2(startX, j);
+                            break;
+                        }
+                    }
+                }
+            }
+            if (player.crt_dir == RIGHT)
+            {
+                int len = labyrinth.GetLength(1);
+                for (int i = startX; i < len; i++)
+                {
+                    if (labyrinth[startY,i] == WALL)
+                    {
+                        player.turn_point = new Vector2(i - 1, startY);
+                        break;
+                    }
+                    else if (player.next_dir.Y != 0)
+                    {
+                        int tryY = startY + (int)player.next_dir.Y;
+                        if (labyrinth[tryY,i] == PATH)
+                        {
+                            player.turn_point = new Vector2(i, startY);
+                            break;
+                        }
+                    }
+                }
+            }
+            if (player.crt_dir == LEFT)
+            {
+                for (int i = startX; i >= 0; i--)
+                {
+                    if (labyrinth[startY,i] == WALL)
+                    {
+                        player.turn_point = new Vector2(i + 1, startY);
+                        break;
+                    }
+                    else if (player.next_dir.Y != 0)
+                    {
+                        int tryY = startY + (int)player.next_dir.Y;
+                        if (labyrinth[tryY,i] == PATH)
+                        {
+                            player.turn_point = new Vector2(i, startY);
+                            break;
+                        }
+                    }
+                }
+
+            }
+
+            if (player.crt_dir == player.next_dir)
+                player.next_dir = NONE;
+        }
+
 
         bool IEquatable<string>.Equals(string other)
         {
