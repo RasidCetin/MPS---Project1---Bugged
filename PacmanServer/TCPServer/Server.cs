@@ -126,7 +126,7 @@ namespace TCPServer
         {
 			lock (_connectedClients)
 			{
-				Console.WriteLine("Send to " + _connectedClients.Count + " clients: " + payload);
+				//Console.WriteLine("Send to " + _connectedClients.Count + " clients: " + payload);
 
 				_connectedClients.ForEach(cn => cn.Send(payload));
 			}

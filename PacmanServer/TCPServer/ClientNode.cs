@@ -117,6 +117,8 @@ namespace TCPServer
 
                 update_turning_point();
             }
+
+
         }
 
         int get_next_idx(float pos, float dir)

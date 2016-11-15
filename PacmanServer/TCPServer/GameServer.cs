@@ -88,13 +88,13 @@ namespace TCPServer
                 foreach (String input in inputs)
                 {
                     string[] info = input.Split(',');
-                    string message = "";
+                    //string message = "";
                     int clientId = Int32.Parse(info[0]);
                     _connectedClients[clientId].treatInput(info[1]);
 
                     // mesajul trimis la clienti
                     // id + pos + crt_dir + next_dir + turning_point
-                     message += "M4" + clientId + ","
+                     string message = "M4" + clientId + ","
                         + _connectedClients[clientId].player.pos.X +
                         ";" +  _connectedClients[clientId].player.pos.Y +","
                         + _connectedClients[clientId].player.crt_dir.X + ";" 
@@ -112,11 +112,15 @@ namespace TCPServer
                 {
                     SendToAllClients(reply);
                 }
+                replies.Clear();
                 
                 simulate(dT);
                 sw.Stop();
-                dT = sw.Elapsed.Milliseconds / 1000.0f;
-                sw.Start();
+                dT = sw.ElapsedMilliseconds / 1000.0f;
+                Console.WriteLine(sw.ElapsedMilliseconds);
+                sw.Restart();
+
+                Thread.Sleep((int)(1000.0f / 58.0f) - sw.Elapsed.Milliseconds);
             }
         }
         public override void ProcessPayload(ClientNode c, string payload)
